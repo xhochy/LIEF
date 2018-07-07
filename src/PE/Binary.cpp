@@ -196,7 +196,6 @@ void Binary::write(const std::string& filename) {
 
   builder.
     build_imports(false).
-    patch_imports(false).
     build_relocations(false).
     build_tls(false).
     build_resources(true);
@@ -690,14 +689,12 @@ Section& Binary::add_section(const Section& section, PE_SECTION_TYPES type) {
   if (type == PE_SECTION_TYPES::IMPORT) {
 
     new_section->add_characteristic(SECTION_CHARACTERISTICS::IMAGE_SCN_MEM_READ);
-    new_section->add_characteristic(SECTION_CHARACTERISTICS::IMAGE_SCN_MEM_EXECUTE);
     new_section->add_characteristic(SECTION_CHARACTERISTICS::IMAGE_SCN_MEM_WRITE);
+    new_section->add_characteristic(SECTION_CHARACTERISTICS::IMAGE_SCN_CNT_INITIALIZED_DATA);
 
     this->data_directory(DATA_DIRECTORY::IMPORT_TABLE).RVA(new_section->virtual_address());
     this->data_directory(DATA_DIRECTORY::IMPORT_TABLE).size(new_section->sizeof_raw_data());
     this->data_directory(DATA_DIRECTORY::IMPORT_TABLE).section_ = new_section;
-    this->data_directory(DATA_DIRECTORY::IAT).RVA(0);
-    this->data_directory(DATA_DIRECTORY::IAT).size(0);
   }
 
   if (type == PE_SECTION_TYPES::RELOCATION) {

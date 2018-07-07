@@ -48,7 +48,6 @@ Builder::~Builder(void) = default;
 Builder::Builder(Binary* binary) :
   binary_{binary},
   build_imports_{false},
-  patch_imports_{false},
   build_relocations_{false},
   build_tls_{false},
   build_resources_{false},
@@ -59,10 +58,6 @@ Builder::Builder(Binary* binary) :
 
 Builder& Builder::build_imports(bool flag) {
   this->build_imports_ = flag;
-  return *this;
-}
-Builder& Builder::patch_imports(bool flag) {
-  this->patch_imports_ = flag;
   return *this;
 }
 
@@ -575,7 +570,6 @@ std::ostream& operator<<(std::ostream& os, const Builder& b) {
   os << std::left;
   os << std::boolalpha;
   os << std::setw(20) << "Build imports:"     << b.build_imports_     << std::endl;
-  os << std::setw(20) << "Patch imports:"     << b.patch_imports_     << std::endl;
   os << std::setw(20) << "Build relocations:" << b.build_relocations_ << std::endl;
   os << std::setw(20) << "Build TLS:"         << b.build_tls_         << std::endl;
   os << std::setw(20) << "Build resources:"   << b.build_resources_   << std::endl;

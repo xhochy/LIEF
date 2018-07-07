@@ -124,6 +124,9 @@ class LIEF_API Import : public Object {
   uint32_t         import_address_table_RVA_;
   std::string      name_;
   PE_TYPE          type_;
+
+  size_t           original_number_of_entries_{0};
+
 };
 
 }

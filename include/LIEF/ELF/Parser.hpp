@@ -183,6 +183,12 @@ class LIEF_API Parser : public LIEF::Parser {
     void parse_pltgot_relocations(uint64_t offset, uint64_t size);
 
 
+    //! @brief Parse Android packed relocations
+    //! https://chromium.googlesource.com/chromium/src/+/66.0.3359.158/third_party/android_platform/bionic/tools/relocation_packer/src/delta_encoder.h
+    template<typename ELF_T, typename REL_T>
+    void parse_packed_relocations(uint64_t offset, uint64_t size);
+
+
     //! @brief Parse relocations using LIEF::ELF::Section.
     //!
     //! Parser::parse_dynamic_relocations and Parser::parse_pltgot_relocations

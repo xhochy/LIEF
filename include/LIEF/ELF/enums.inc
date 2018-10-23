@@ -473,6 +473,10 @@ enum _LIEF_EN(ELF_SECTION_TYPES) {
   _LIEF_EI(SHT_ARM_OVERLAYSECTION)  = 0x70000005U,
   _LIEF_EI(SHT_HEX_ORDERED)         = 0x70000000, /**< Link editor is to sort the entries in */
 
+
+  _LIEF_EI(SHT_ANDROID_REL)         = 0x60000001, /**< Android Packed relocation (Rela) */
+  _LIEF_EI(SHT_ANDROID_RELA)        = 0x60000002, /**< Android Packed relocation (Rel) */
+
   /* this section based on their sizes */
   _LIEF_EI(SHT_X86_64_UNWIND)       = 0x70000001, /**< Unwind information */
   _LIEF_EI(SHT_MIPS_REGINFO)        = 0x70000006, /**< Register usage information */
@@ -687,6 +691,12 @@ enum _LIEF_EN(DYNAMIC_TAGS) {
   _LIEF_EI(DT_VERDEFNUM)                  = 0x6FFFFFFD, /**< The number of entries in DT_VERDEF. */
   _LIEF_EI(DT_VERNEED)                    = 0x6FFFFFFE, /**< The address of the version Dependency table. */
   _LIEF_EI(DT_VERNEEDNUM)                 = 0x6FFFFFFF, /**< The number of entries in DT_VERNEED. */
+  /* Android specific dynamic table entry tags */
+  _LIEF_EI(DT_ANDROID_REL)                = 0x6000000F, /**< The offset of packed relocation data */
+  _LIEF_EI(DT_ANDROID_RELSZ)              = 0x60000010, /**< The size of packed relocation data in bytes  */
+
+  _LIEF_EI(DT_ANDROID_RELA)               = 0x60000011, /**< The offset of packed relocation data */
+  _LIEF_EI(DT_ANDROID_RELASZ)             = 0x60000012, /**< The size of packed relocation data in bytes  */
 
   /* Mips specific dynamic table entry tags. */
   _LIEF_EI(DT_MIPS_RLD_VERSION)           = 0x70000001, /**< 32 bit version number for runtime linker interface. */
@@ -937,9 +947,17 @@ enum _LIEF_EN(NOTE_ABIS) {
 };
 
 enum _LIEF_EN(RELOCATION_PURPOSES) {
-  _LIEF_EI(RELOC_PURPOSE_NONE)    = 0,
-  _LIEF_EI(RELOC_PURPOSE_PLTGOT)  = 1,
-  _LIEF_EI(RELOC_PURPOSE_DYNAMIC) = 2,
-  _LIEF_EI(RELOC_PURPOSE_OBJECT)  = 3,
+  _LIEF_EI(RELOC_PURPOSE_NONE)            = 0,
+  _LIEF_EI(RELOC_PURPOSE_PLTGOT)          = 1,
+  _LIEF_EI(RELOC_PURPOSE_DYNAMIC)         = 2,
+  _LIEF_EI(RELOC_PURPOSE_OBJECT)          = 3,
+  _LIEF_EI(RELOC_PURPOSE_ANDROID_DYNAMIC) = 4,
+};
+
+enum _LIEF_EN(PACKED_RELOCATION_FLAGS) {
+  _LIEF_EI(RELOCATION_GROUPED_BY_INFO_FLAG)         = 1,
+  _LIEF_EI(RELOCATION_GROUPED_BY_OFFSET_DELTA_FLAG) = 2,
+  _LIEF_EI(RELOCATION_GROUPED_BY_ADDEND_FLAG)       = 4,
+  _LIEF_EI(RELOCATION_GROUP_HAS_ADDEND_FLAG)        = 8,
 };
 

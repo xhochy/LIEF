@@ -228,8 +228,65 @@ void Parser::parse_binary(void) {
       LOG(WARNING) << e.what();
 
     }
+  }
 
+  // Parse Android packed relocations
+  // ================================
 
+  // RELA
+  // ----
+  auto&& it_android_rela = std::find_if(
+      std::begin(this->binary_->dynamic_entries_),
+      std::end(this->binary_->dynamic_entries_),
+      [] (const DynamicEntry* entry) {
+        return entry != nullptr and entry->tag() == DYNAMIC_TAGS::DT_ANDROID_RELA;
+      });
+
+  auto&& it_android_relasz = std::find_if(
+      std::begin(this->binary_->dynamic_entries_),
+      std::end(this->binary_->dynamic_entries_),
+      [] (const DynamicEntry* entry) {
+        return entry != nullptr and entry->tag() == DYNAMIC_TAGS::DT_ANDROID_RELASZ;
+      });
+
+  if (it_android_rela != std::end(this->binary_->dynamic_entries_) and
+      it_android_relasz != std::end(this->binary_->dynamic_entries_)) {
+    const uint64_t virtual_address = (*it_android_rela)->value();
+    const uint64_t size            = (*it_android_relasz)->value();
+    try {
+      uint64_t offset = this->binary_->virtual_address_to_offset(virtual_address);
+      this->parse_packed_relocations<ELF_T, typename ELF_T::Elf_Rela>(offset, size);
+    } catch (const LIEF::exception& e) {
+      LOG(ERROR) << e.what();
+    }
+  }
+
+  // REL
+  // ---
+  auto&& it_android_rel = std::find_if(
+      std::begin(this->binary_->dynamic_entries_),
+      std::end(this->binary_->dynamic_entries_),
+      [] (const DynamicEntry* entry) {
+        return entry != nullptr and entry->tag() == DYNAMIC_TAGS::DT_ANDROID_REL;
+      });
+
+  auto&& it_android_relsz = std::find_if(
+      std::begin(this->binary_->dynamic_entries_),
+      std::end(this->binary_->dynamic_entries_),
+      [] (const DynamicEntry* entry) {
+        return entry != nullptr and entry->tag() == DYNAMIC_TAGS::DT_ANDROID_RELSZ;
+      });
+
+  if (it_android_rel != std::end(this->binary_->dynamic_entries_) and
+      it_android_relsz != std::end(this->binary_->dynamic_entries_)) {
+    const uint64_t virtual_address = (*it_android_rel)->value();
+    const uint64_t size            = (*it_android_relsz)->value();
+    try {
+      uint64_t offset = this->binary_->virtual_address_to_offset(virtual_address);
+      this->parse_packed_relocations<ELF_T, typename ELF_T::Elf_Rel>(offset, size);
+    } catch (const LIEF::exception& e) {
+      LOG(ERROR) << e.what();
+    }
   }
 
   // Parse Symbol Version
@@ -994,7 +1051,98 @@ void Parser::parse_dynamic_relocations(uint64_t relocations_offset, uint64_t siz
 
     this->binary_->relocations_.push_back(reloc.release());
   }
-} // build_dynamic_reclocations
+} // parse_dynamic_relocations
+
+
+template<typename ELF_T, typename REL_T>
+void Parser::parse_packed_relocations(uint64_t offset, uint64_t size) {
+  static_assert(std::is_same<REL_T, typename ELF_T::Elf_Rel>::value or
+                std::is_same<REL_T, typename ELF_T::Elf_Rela>::value, "REL_T must be Elf_Rel or Elf_Rela");
+  static constexpr const char* MAGIC_VALUE = "APS2";
+  VLOG(VDEBUG) << "[+] Parse Android packed relocations";
+
+  const uint8_t shift = std::is_same<ELF_T, ELF32>::value ? 8 : 32;
+
+  // Already parsed
+  this->stream_->setpos(offset);
+  if (not this->stream_->can_read<char[4]>()) {
+    LOG(ERROR) << "Can't Read magic";
+    return;
+  }
+  std::string magic = this->stream_->read<char[4]>();
+  if (magic != std::string(MAGIC_VALUE)) {
+    LOG(ERROR) << "Bad magic value (" << magic << " vs " << MAGIC_VALUE << ")";
+    //return;
+  }
+
+  this->stream_->setpos(offset + 4);
+
+  uint64_t nb_relocs    = this->stream_->read_sleb128();
+  uint64_t reloc_offset = this->stream_->read_sleb128();
+  uint64_t addend       = 0;
+  std::cout << "nb relocs: " << std::dec << nb_relocs << std::endl;
+  while (nb_relocs > 0) {
+    uint64_t nb_relocs_group = this->stream_->read_sleb128();
+    if (nb_relocs_group > nb_relocs) {
+      LOG(ERROR) << "Too many relocation in the group (" << std::dec << nb_relocs_group << " > " << nb_relocs << ")";
+      break;
+    }
+    nb_relocs -= nb_relocs_group;
+
+    PACKED_RELOCATION_FLAGS group_flags = static_cast<PACKED_RELOCATION_FLAGS>(this->stream_->read_sleb128());
+    bool grouped_info      = static_cast<bool>(group_flags & PACKED_RELOCATION_FLAGS::RELOCATION_GROUPED_BY_INFO_FLAG);
+    bool grouped_off_delta = static_cast<bool>(group_flags & PACKED_RELOCATION_FLAGS::RELOCATION_GROUPED_BY_OFFSET_DELTA_FLAG);
+    bool grouped_addend    = static_cast<bool>(group_flags & PACKED_RELOCATION_FLAGS::RELOCATION_GROUPED_BY_ADDEND_FLAG);
+    bool has_addend        = static_cast<bool>(group_flags & PACKED_RELOCATION_FLAGS::RELOCATION_GROUP_HAS_ADDEND_FLAG);
+
+    uint64_t group_offset_delta = 0;
+    uint64_t group_rinfo        = 0;
+    if (grouped_off_delta) {
+      group_offset_delta = this->stream_->read_sleb128();
+    }
+
+    if (grouped_info) {
+      group_rinfo = this->stream_->read_sleb128();
+    }
+
+    if (grouped_addend and has_addend) {
+      addend += this->stream_->read_sleb128();
+    }
+
+    for (uint64_t i = 0; i < nb_relocs_group; ++i) {
+      REL_T reloc;
+      reloc_offset += grouped_off_delta ? group_offset_delta : this->stream_->read_sleb128();
+
+      reloc.r_offset = reloc_offset;
+      reloc.r_info   = grouped_info ? group_rinfo : this->stream_->read_sleb128();
+
+      if (has_addend) {
+        if (not grouped_addend) {
+          addend += this->stream_->read_sleb128();
+        }
+
+        if /* constexpr */(std::is_same<REL_T, typename ELF_T::Elf_Rela>::value) {
+          reinterpret_cast<typename ELF_T::Elf_Rela*>(&reloc)->r_addend = addend;
+        }
+      } else {
+        if /* constexpr */(std::is_same<REL_T, typename ELF_T::Elf_Rela>::value) {
+          reinterpret_cast<typename ELF_T::Elf_Rela*>(&reloc)->r_addend = 0;
+        }
+      }
+
+      std::unique_ptr<Relocation> relocation{new Relocation{&reloc}};
+      relocation->architecture_ = this->binary_->header_.machine_type();
+      relocation->purpose(RELOCATION_PURPOSES::RELOC_PURPOSE_ANDROID_DYNAMIC);
+      const uint32_t idx  = static_cast<uint32_t>(reloc.r_info >> shift);
+      if (idx > 0 and idx < this->binary_->dynamic_symbols_.size()) {
+        relocation->symbol_ = this->binary_->dynamic_symbols_[idx];
+      }
+      std::cout << *relocation << std::endl;
+    }
+
+
+  }
+}
 
 
 

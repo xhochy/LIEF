@@ -274,7 +274,7 @@ const char* to_string(SEGMENT_TYPES e) {
 }
 
 const char* to_string(DYNAMIC_TAGS e) {
-  CONST_MAP(DYNAMIC_TAGS, const char*, 87) enumStrings {
+  CONST_MAP(DYNAMIC_TAGS, const char*, 95) enumStrings {
     { DYNAMIC_TAGS::DT_NULL,                       "NULL"},
     { DYNAMIC_TAGS::DT_NEEDED,                     "NEEDED"},
     { DYNAMIC_TAGS::DT_PLTRELSZ,                   "PLTRELSZ"},
@@ -318,6 +318,12 @@ const char* to_string(DYNAMIC_TAGS e) {
     { DYNAMIC_TAGS::DT_VERDEFNUM,                  "VERDEFNUM"},
     { DYNAMIC_TAGS::DT_VERNEED,                    "VERNEED"},
     { DYNAMIC_TAGS::DT_VERNEEDNUM,                 "VERNEEDNUM"},
+
+    { DYNAMIC_TAGS::DT_ANDROID_REL,                "ANDROID_REL"    },
+    { DYNAMIC_TAGS::DT_ANDROID_RELSZ,              "ANDROID_RELSZ"  },
+    { DYNAMIC_TAGS::DT_ANDROID_RELA,               "ANDROID_RELA"   },
+    { DYNAMIC_TAGS::DT_ANDROID_RELASZ,             "ANDROID_RELASZ" },
+
     { DYNAMIC_TAGS::DT_MIPS_RLD_VERSION,           "MIPS_RLD_VERSION"},
     { DYNAMIC_TAGS::DT_MIPS_TIME_STAMP,            "MIPS_TIME_STAMP"},
     { DYNAMIC_TAGS::DT_MIPS_ICHECKSUM,             "MIPS_ICHECKSUM"},
@@ -370,7 +376,7 @@ const char* to_string(DYNAMIC_TAGS e) {
 
 
 const char* to_string(ELF_SECTION_TYPES e) {
-  CONST_MAP(ELF_SECTION_TYPES, const char*, 35) enumStrings {
+  CONST_MAP(ELF_SECTION_TYPES, const char*, 37) enumStrings {
     { ELF_SECTION_TYPES::SHT_NULL,               "NULL"},
     { ELF_SECTION_TYPES::SHT_PROGBITS,           "PROGBITS"},
     { ELF_SECTION_TYPES::SHT_SYMTAB,             "SYMTAB"},
@@ -408,7 +414,10 @@ const char* to_string(ELF_SECTION_TYPES e) {
     //{ ELF_SECTION_TYPES::SHT_MIPS_ABIFLAGS,      "MIPS_ABIFLAGS"},
     { ELF_SECTION_TYPES::SHT_HIPROC,             "HIPROC"},
     { ELF_SECTION_TYPES::SHT_LOUSER,             "LOUSER"},
-    { ELF_SECTION_TYPES::SHT_HIUSER,             "HIUSER"}
+    { ELF_SECTION_TYPES::SHT_HIUSER,             "HIUSER"},
+
+    { ELF_SECTION_TYPES::SHT_ANDROID_REL,        "ANDROID_REL"},
+    { ELF_SECTION_TYPES::SHT_ANDROID_RELA,       "ANDROID_RELA"},
   };
   auto   it  = enumStrings.find(e);
   return it == enumStrings.end() ? "UNDEFINED" : it->second;
@@ -1118,11 +1127,12 @@ const char* to_string(NOTE_ABIS e) {
 }
 
 const char* to_string(RELOCATION_PURPOSES e) {
-  CONST_MAP(RELOCATION_PURPOSES, const char*, 4) enumStrings {
-    { RELOCATION_PURPOSES::RELOC_PURPOSE_NONE,    "NONE"},
-    { RELOCATION_PURPOSES::RELOC_PURPOSE_PLTGOT,  "PLTGOT"},
-    { RELOCATION_PURPOSES::RELOC_PURPOSE_DYNAMIC, "DYNAMIC"},
-    { RELOCATION_PURPOSES::RELOC_PURPOSE_OBJECT,  "OBJECT"},
+  CONST_MAP(RELOCATION_PURPOSES, const char*, 5) enumStrings {
+    { RELOCATION_PURPOSES::RELOC_PURPOSE_NONE,            "NONE"},
+    { RELOCATION_PURPOSES::RELOC_PURPOSE_PLTGOT,          "PLTGOT"},
+    { RELOCATION_PURPOSES::RELOC_PURPOSE_DYNAMIC,         "DYNAMIC"},
+    { RELOCATION_PURPOSES::RELOC_PURPOSE_OBJECT,          "OBJECT"},
+    { RELOCATION_PURPOSES::RELOC_PURPOSE_ANDROID_DYNAMIC, "ANDROID_DYNAMIC"},
   };
 
   auto   it  = enumStrings.find(e);

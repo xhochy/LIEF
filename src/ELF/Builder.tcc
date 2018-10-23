@@ -1434,6 +1434,11 @@ void Builder::build_dynamic_relocations(void) {
   relocation_section.content(std::move(content.raw()));
 }
 
+
+template<typename ELF_T>
+void Builder::build_packed_relocations(void) {
+}
+
 template<typename ELF_T>
 void Builder::build_pltgot_relocations(void) {
   using Elf_Addr   = typename ELF_T::Elf_Addr;

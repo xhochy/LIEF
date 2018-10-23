@@ -73,6 +73,9 @@ class LIEF_API Builder {
     void build_dynamic_relocations(void);
 
     template<typename ELF_T>
+    void build_packed_relocations(void);
+
+    template<typename ELF_T>
     void build_pltgot_relocations(void);
 
     template<typename ELF_T>

@@ -24,7 +24,7 @@ using namespace LIEF::ELF;
 
 int main(int argc, char **argv) {
 
-  LIEF::Logger::set_level(LIEF::LOGGING_LEVEL::LOG_INFO);
+  LIEF::Logger::set_level(LIEF::LOGGING_LEVEL::LOG_ERROR);
   if (argc != 2) {
     std::cerr << "Usage: " << argv[0] << " <ELF binary>" << std::endl;
     return EXIT_FAILURE;
@@ -38,7 +38,6 @@ int main(int argc, char **argv) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   }
-  binary->functions();
   return EXIT_SUCCESS;
 
   std::cout << "Binary: " << binary->name() << std::endl;

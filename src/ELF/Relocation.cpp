@@ -380,7 +380,7 @@ std::ostream& operator<<(std::ostream& os, const Relocation& entry) {
      << std::setw(4) << std::dec << entry.size()
      << std::setw(10) << std::hex << entry.addend()
      << std::setw(10) << std::hex << entry.info()
-     << std::setw(10) << to_string(entry.purpose())
+     << std::setw(16) << to_string(entry.purpose())
      << std::setw(10) << symbol_name;
 
   return os;

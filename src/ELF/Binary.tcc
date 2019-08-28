@@ -18,6 +18,31 @@
 namespace LIEF {
 namespace ELF {
 
+// Helpers
+// =======
+
+// Return the last LOAD segment of the Binary object
+Segment* last_load_segment(Binary* elf) {
+  Segment* last_segment = nullptr;
+  for (Segment& segment : elf->segments()) {
+    if (segment.type() != SEGMENT_TYPES::PT_LOAD or segment.is_new()) {
+      continue;
+    }
+    if (last_segment == nullptr) {
+      last_segment = &segment;
+      continue;
+    }
+
+    if (segment.virtual_address() >= last_segment->virtual_address() and
+        segment.virtual_address() + segment.virtual_size() >=
+        last_segment->virtual_address() + last_segment->virtual_size()) {
+      last_segment = &segment;
+    }
+  }
+  return last_segment;
+}
+
+
 // ===============
 // ARM Relocations
 // ===============
@@ -271,19 +296,11 @@ Segment& Binary::add_segment<E_TYPE::ET_EXEC>(const Segment& segment, uint64_t b
 
   header.numberof_segments(header.numberof_segments() + 1);
 
-  auto&& it_text_segment = std::find_if(
-      std::begin(this->segments_),
-      std::end(this->segments_),
-      [] (const Segment* s) {
-        return s->type() == SEGMENT_TYPES::PT_LOAD and
-               s->has(ELF_SEGMENT_FLAGS::PF_X) and s->has(ELF_SEGMENT_FLAGS::PF_R);
-      });
+  Segment* last_load = last_load_segment(this);
 
-  if (it_text_segment == std::end(this->segments_)) {
-    throw not_found("Unable to find a LOAD segment with 'r-x' permissions");
+  if (last_load == nullptr) {
+    throw not_found("Unable to find a last LOAD segment");
   }
-
-  Segment* text_segment = *it_text_segment;
 
   uint64_t last_offset_sections = std::accumulate(
       std::begin(this->sections_),
@@ -330,7 +347,7 @@ Segment& Binary::add_segment<E_TYPE::ET_EXEC>(const Segment& segment, uint64_t b
     VLOG(VDEBUG) << "New PHDR size 0x" << std::hex << new_phdr_size;
 
     phdr_segment->file_offset(new_phdr_offset);
-    phdr_segment->virtual_address(text_segment->virtual_address() - text_segment->file_offset() + phdr_segment->file_offset());
+    phdr_segment->virtual_address(last_load->virtual_address() - last_load->file_offset() + phdr_segment->file_offset());
 
     phdr_segment->physical_address(phdr_segment->virtual_address());
 
@@ -338,10 +355,10 @@ Segment& Binary::add_segment<E_TYPE::ET_EXEC>(const Segment& segment, uint64_t b
     phdr_segment->virtual_size(phdr_segment->virtual_size() + phdr_size);
 
     uint64_t gap  = phdr_segment->file_offset() + phdr_segment->physical_size();
-             gap -= text_segment->file_offset() + text_segment->physical_size();
+             gap -= last_load->file_offset() + last_load->physical_size();
 
-    text_segment->physical_size(text_segment->physical_size() + gap);
-    text_segment->virtual_size(text_segment->virtual_size() + gap);
+    last_load->physical_size(last_load->physical_size() + gap);
+    last_load->virtual_size(last_load->virtual_size() + gap);
 
     // Clear PHDR segment
     phdr_segment->content(std::vector<uint8_t>(phdr_segment->physical_size(), 0));
@@ -431,7 +448,7 @@ Segment& Binary::add_segment<E_TYPE::ET_EXEC>(const Segment& segment, uint64_t b
     const size_t idx = std::distance(std::begin(this->segments_), it_new_segment_place.base());
     this->segments_.insert(std::begin(this->segments_) + idx, new_segment);
   }
-
+  new_segment->is_new_ = true;
   return *new_segment;
 }
 
@@ -544,6 +561,7 @@ Segment& Binary::add_segment<E_TYPE::ET_DYN>(const Segment& segment, uint64_t ba
     this->segments_.insert(std::begin(this->segments_) + idx, new_segment);
   }
 
+  new_segment->is_new_ = true;
   return *new_segment;
 }
 

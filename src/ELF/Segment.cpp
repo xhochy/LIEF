@@ -43,7 +43,8 @@ Segment::Segment(const Segment& other) :
   alignment_{other.alignment_},
   sections_{},
   datahandler_{nullptr},
-  content_c_{other.content()}
+  content_c_{other.content()},
+  is_new_{other.is_new_}
 {}
 
 
@@ -59,7 +60,8 @@ Segment::Segment(const Elf64_Phdr* header) :
   alignment_{header->p_align},
   sections_{},
   datahandler_{nullptr},
-  content_c_{}
+  content_c_{},
+  is_new_{false}
 {}
 
 Segment::Segment(const Elf32_Phdr* header) :
@@ -73,7 +75,8 @@ Segment::Segment(const Elf32_Phdr* header) :
   alignment_{header->p_align},
   sections_{},
   datahandler_{nullptr},
-  content_c_{}
+  content_c_{},
+  is_new_{false}
 {}
 
 Segment::Segment(void) :
@@ -87,7 +90,8 @@ Segment::Segment(void) :
   alignment_{0},
   sections_{},
   datahandler_{nullptr},
-  content_c_{}
+  content_c_{},
+  is_new_{false}
 {}
 
 void Segment::swap(Segment& other) {
@@ -102,6 +106,7 @@ void Segment::swap(Segment& other) {
   std::swap(this->sections_,         other.sections_);
   std::swap(this->datahandler_,      other.datahandler_);
   std::swap(this->content_c_,        other.content_c_);
+  std::swap(this->is_new_,           other.is_new_);
 }
 
 
@@ -180,6 +185,10 @@ std::vector<uint8_t> Segment::content(void) const {
       DataHandler::Node::SEGMENT);
   const std::vector<uint8_t>& binary_content = this->datahandler_->content();
   return {binary_content.data() + node.offset(), binary_content.data() + node.offset() + node.size()};
+}
+
+bool Segment::is_new(void) const {
+  return this->is_new_;
 }
 
 

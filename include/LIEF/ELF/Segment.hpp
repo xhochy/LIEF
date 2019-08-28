@@ -63,6 +63,9 @@ class LIEF_API Segment : public Object {
     uint64_t alignment(void) const;
     std::vector<uint8_t> content(void) const;
 
+    //! Return true if the segment does not come from the original binary
+    bool is_new(void) const;
+
     bool has(ELF_SEGMENT_FLAGS flag) const;
     bool has(const Section& section) const;
     bool has(const std::string& section_name) const;
@@ -107,6 +110,7 @@ class LIEF_API Segment : public Object {
     sections_t            sections_;
     DataHandler::Handler* datahandler_;
     std::vector<uint8_t>  content_c_;
+    bool                  is_new_;
 };
 
 

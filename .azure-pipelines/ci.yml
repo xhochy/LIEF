@@ -7,10 +7,67 @@ trigger:
 - master
 - ci/azure
 
-pool:
-  vmImage: 'ubuntu-latest'
+jobs:
+  job: Windows_CI
+  displayName: Windows CI
+  pool:
+    vmImage: windows-2019
 
-steps:
-- script: |
-    mkdir build && cd build && cmake .. && make
-  displayName: 'make'
+  strategy:
+      matrix:
+        win32:
+          arch: win32
+          buildOpt:
+          testRunTitle: '$(Build.SourceBranchName)-win32'
+          testRunPlatform: win32
+        win64:
+          arch: amd64
+          buildOpt: '-p x64'
+          testRunTitle: '$(Build.SourceBranchName)-win64'
+          testRunPlatform: win64
+      maxParallel: 4
+
+  steps:
+    - powershell: |
+        cmake --version
+        $python3_path = ((Get-Item C:\hostedtoolcache\windows\Python\3*\x64) | Sort-Object -Descending)[0].FullName
+        & $python3_path\python -m pip install --upgrade pip --no-warn-script-location
+        & $python3_path\python -m pip install setuptools psutil timeout_decorator thrift==0.11.0
+      displayName: Install tests prerequisites
+
+    - powershell: |
+        mkdir $(Build.BinariesDirectory)\build
+      displayName: "Create build folder"
+
+    - powershell: |
+        (New-Object System.Net.WebClient).DownloadFile(`
+        "https://github.com/osquery/sccache/releases/download/0.0.1-osquery/sccache-0.0.1-windows.7z",`
+        "$env:TEMP\sccache.7z")
+        mkdir "C:\Program Files\sccache"
+        7z x -o"C:\Program Files\sccache" -y "$env:TEMP\sccache.7z"
+        Write-Host "##vso[task.prependpath]C:\Program Files\sccache"
+      displayName: "Install sccache"
+
+    - powershell: |
+        (New-Object System.Net.WebClient).DownloadFile(`
+        "https://github.com/ninja-build/ninja/releases/download/v1.10.0/ninja-win.zip",`
+        "$env:TEMP\ninja-win.zip")
+        mkdir "C:\Program Files\Ninja"
+        7z x -o"C:\Program Files\Ninja" -y "$env:TEMP\ninja-win.zip"
+        Write-Host "##vso[task.prependpath]C:\Program Files\Ninja"
+      displayName: "Install Ninja"
+
+    - script: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        cmake -G Ninja ^
+        -DCMAKE_C_COMPILER=cl.exe ^
+        -DCMAKE_CXX_COMPILER=cl.exe ^
+        -DCMAKE_BUILD_TYPE=Release ^
+        -DOSQUERY_BUILD_TESTS=ON ^
+        -DCMAKE_C_COMPILER_LAUNCHER="sccache.exe" ^
+        -DCMAKE_CXX_COMPILER_LAUNCHER="sccache.exe" ^
+        $(Build.SourcesDirectory)
+      displayName: "Configure"
+      workingDirectory: $(Build.BinariesDirectory)\build
+
+

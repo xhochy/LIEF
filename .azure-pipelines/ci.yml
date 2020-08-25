@@ -14,39 +14,31 @@ jobs:
       vmImage: windows-2019
 
     strategy:
+        maxParallel: 6
         matrix:
-          win32:
-            arch: win32
-            buildOpt:
-            testRunTitle: '$(Build.SourceBranchName)-win32'
-            testRunPlatform: win32
-          win64:
-            arch: amd64
-            buildOpt: '-p x64'
-            testRunTitle: '$(Build.SourceBranchName)-win64'
-            testRunPlatform: win64
-        maxParallel: 4
+          Python36-64bit:
+            PYTHON_VERSION: '3.6'
+            PYTHON_ARCH: 'x64'
+            BITS: 64
 
     steps:
-      - powershell: |
-          cmake --version
-          $python3_path = ((Get-Item C:\hostedtoolcache\windows\Python\3*\x64) | Sort-Object -Descending)[0].FullName
-          & $python3_path\python -m pip install --upgrade pip --no-warn-script-location
-          & $python3_path\python -m pip install setuptools psutil timeout_decorator thrift==0.11.0
-        displayName: Install tests prerequisites
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: $(PYTHON_VERSION)
+          addToPath: true
+          architecture: $(PYTHON_ARCH)
+      - script: python -m pip install --disable-pip-version-check --user --upgrade pip
+        displayName: 'Install tools'
+
+      - script: python -m pip install --user wheel mako
+        displayName: 'Install tools'
+
+      - script: python -m pip install --upgrade setuptools
+        displayName: 'Install tools'
 
       - powershell: |
           mkdir $(Build.BinariesDirectory)\build
         displayName: "Create build folder"
-
-      - powershell: |
-          (New-Object System.Net.WebClient).DownloadFile(`
-          "https://github.com/osquery/sccache/releases/download/0.0.1-osquery/sccache-0.0.1-windows.7z",`
-          "$env:TEMP\sccache.7z")
-          mkdir "C:\Program Files\sccache"
-          7z x -o"C:\Program Files\sccache" -y "$env:TEMP\sccache.7z"
-          Write-Host "##vso[task.prependpath]C:\Program Files\sccache"
-        displayName: "Install sccache"
 
       - powershell: |
           (New-Object System.Net.WebClient).DownloadFile(`
@@ -57,17 +49,23 @@ jobs:
           Write-Host "##vso[task.prependpath]C:\Program Files\Ninja"
         displayName: "Install Ninja"
 
+        #- script: |
+        #    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        #    cmake -G Ninja ^
+        #    -DCMAKE_C_COMPILER=cl.exe ^
+        #    -DCMAKE_CXX_COMPILER=cl.exe ^
+        #    -DCMAKE_BUILD_TYPE=Release ^
+        #    -DOSQUERY_BUILD_TESTS=ON ^
+        #    -DCMAKE_C_COMPILER_LAUNCHER="sccache.exe" ^
+        #    -DCMAKE_CXX_COMPILER_LAUNCHER="sccache.exe" ^
+        #    $(Build.SourcesDirectory)
+        #  displayName: "Configure"
+        #  workingDirectory: $(Build.BinariesDirectory)\build
+
       - script: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          cmake -G Ninja ^
-          -DCMAKE_C_COMPILER=cl.exe ^
-          -DCMAKE_CXX_COMPILER=cl.exe ^
-          -DCMAKE_BUILD_TYPE=Release ^
-          -DOSQUERY_BUILD_TESTS=ON ^
-          -DCMAKE_C_COMPILER_LAUNCHER="sccache.exe" ^
-          -DCMAKE_CXX_COMPILER_LAUNCHER="sccache.exe" ^
-          $(Build.SourcesDirectory)
+          python .\setup.py --sdk --lief-test bdist_wheel && exit 0
         displayName: "Configure"
-        workingDirectory: $(Build.BinariesDirectory)\build
+        workingDirectory: $(Build.SourcesDirectory)
 
 

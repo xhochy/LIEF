@@ -77,19 +77,19 @@ jobs:
         displayName: "Build & Run"
         workingDirectory: $(Build.SourcesDirectory)
 
-      - task: CopyPythonWheels123
+      - task: CopyPythonWheels123@1
         inputs:
           sourceFolder: '$(Build.SourcesDirectory)'
           contents: '**/$(BuildConfiguration)/dist/*.whl'
           targetFolder: '$(Build.ArtifactStagingDirectory)'
 
-      - task: CopySDK123
+      - task: CopySDK123@1
         inputs:
           sourceFolder: '$(Build.SourcesDirectory)'
           contents: 'build/*.zip'
           targetFolder: '$(Build.ArtifactStagingDirectory)'
 
-      - task: PublishBuildArtifacts123
+      - task: PublishBuildArtifacts123@1
         inputs:
           pathToPublish: '$(Build.ArtifactStagingDirectory)'
           artifactName: lief-artifacts

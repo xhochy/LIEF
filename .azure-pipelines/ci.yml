@@ -9,15 +9,28 @@ trigger:
 
 jobs:
   - job: Windows_CI
+    timeoutInMinutes: 120
     displayName: Windows CI
     pool:
       vmImage: windows-2019
+    variables:
+      SCCACHE_DIR: $(Pipeline.Workspace)\sccache
+      SCCACHE_CACHE_SIZE: "5G"
+      AZP_CACHING_CONTENT_FORMAT: Files
 
     strategy:
         maxParallel: 6
         matrix:
           Python36-64bit:
             PYTHON_VERSION: '3.6'
+            PYTHON_ARCH: 'x64'
+            BITS: 64
+          Python37-64bit:
+            PYTHON_VERSION: '3.7'
+            PYTHON_ARCH: 'x64'
+            BITS: 64
+          Python38-64bit:
+            PYTHON_VERSION: '3.8'
             PYTHON_ARCH: 'x64'
             BITS: 64
 
@@ -64,19 +77,19 @@ jobs:
         displayName: "Build & Run"
         workingDirectory: $(Build.SourcesDirectory)
 
-      - task: CopyPythonWheels@1
+      - task: CopyPythonWheels@0
         inputs:
           sourceFolder: '$(Build.SourcesDirectory)'
           contents: '**/$(BuildConfiguration)/dist/*.whl'
           targetFolder: '$(Build.ArtifactStagingDirectory)'
 
-      - task: CopySDKs@1
+      - task: CopySDKs@0
         inputs:
           sourceFolder: '$(Build.SourcesDirectory)'
           contents: 'build/*.zip'
           targetFolder: '$(Build.ArtifactStagingDirectory)'
 
-      - task: PublishBuildArtifacts@1
+      - task: PublishBuildArtifacts@0
         inputs:
           pathToPublish: '$(Build.ArtifactStagingDirectory)'
           artifactName: lief-artifacts

@@ -37,10 +37,6 @@ jobs:
         displayName: 'Install tools'
 
       - powershell: |
-          mkdir $(Build.BinariesDirectory)\build
-        displayName: "Create build folder"
-
-      - powershell: |
           (New-Object System.Net.WebClient).DownloadFile(`
           "https://github.com/ninja-build/ninja/releases/download/v1.10.0/ninja-win.zip",`
           "$env:TEMP\ninja-win.zip")
@@ -64,8 +60,24 @@ jobs:
 
       - script: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          python .\setup.py --sdk --lief-test bdist_wheel && exit 0
-        displayName: "Configure"
+          python .\setup.py --ninja --sdk bdist_wheel && exit 0
+        displayName: "Build & Run"
         workingDirectory: $(Build.SourcesDirectory)
 
+      - task: CopyPythonWheels@1
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)'
+          contents: '**/$(BuildConfiguration)/dist/*.whl'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+
+      - task: CopySDKs@1
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)'
+          contents: 'build/*.zip'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+
+      - task: PublishBuildArtifacts@1
+        inputs:
+          pathToPublish: '$(Build.ArtifactStagingDirectory)'
+          artifactName: lief-artifacts
 

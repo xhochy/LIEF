@@ -115,6 +115,10 @@ class BuildLibrary(build_ext):
             '-DLIEF_PYTHON_API=on',
         ]
 
+        build_with_ninja = False
+        if self.has_ninja() and self.distribution.ninja:
+            build_with_ninja = True
+
         # LIEF options
         # ============
         if self.distribution.lief_test:

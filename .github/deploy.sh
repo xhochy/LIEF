@@ -28,7 +28,7 @@ sha256sum() {
 }
 fi
 
-if [[ -n $APPVEYOR_JOB_ID ]]; then
+if [[ -n $APPVEYOR_JOB_ID || -n $AZURE_CI ]]; then
 openssl() {
     /usr/bin/openssl "$@"
 }
@@ -53,6 +53,9 @@ branch=
 if [[ -n $APPVEYOR_JOB_ID ]]; then
     branch=$APPVEYOR_REPO_BRANCH
     if [[ -n $APPVEYOR_PULL_REQUEST_NUMBER ]]; then exit 0; fi
+elif [[ -n $AZURE_CI ]]; then
+    branch=$BUILD_SOURCEBRANCHNAME
+    if [[ -n $SYSTEM_PULLREQUEST_PULLREQUESTID ]]; then exit 0; fi
 else
     branch=$TRAVIS_BRANCH
     if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then exit 0; fi
@@ -63,6 +66,7 @@ case $branch in
     master*) ;;
     deploy*) ;;
     "enhancement/setup") ;;
+    "azure") ;;
     *) exit 0;;
 esac
 
@@ -78,6 +82,9 @@ branch="gh-pages"
 if [[ -n $APPVEYOR_JOB_ID ]]; then
     branch="$branch"
     git_user="AppVeyor CI"
+elif [[ -n $AZURE_CI ]]; then
+    branch="$branch"
+    git_user="Azure CI"
 else
     branch="$branch"
     git_user="Travis CI"
@@ -88,6 +95,8 @@ unset timestamp date
 # SETUP 'deploy' DIRECTORY
 # ========================
 if [[ -n $APPVEYOR_JOB_ID ]]; then
+    [[ -z $LIEF_BUILDDIR ]] && LIEF_BUILDDIR=$(readlink -mn -- .)
+elif [[ -n $AZURE_CI ]]; then
     [[ -z $LIEF_BUILDDIR ]] && LIEF_BUILDDIR=$(readlink -mn -- .)
 else
     [[ -z $LIEF_BUILDDIR ]] && LIEF_BUILDDIR=$(readlink -mn -- ./build)
@@ -131,7 +140,7 @@ git add .
 
 cd .. && mkdir -p sdk && cd sdk
 
-if [[ -n $APPVEYOR_JOB_ID ]]; then
+if [[ -n $APPVEYOR_JOB_ID || -n $AZURE_CI ]]; then
     /bin/cp -rf ${LIEF_SRCDIR}/build/*.zip . || true
 else
     /bin/cp -rf ${LIEF_SRCDIR}/build/*.tar.gz . || true

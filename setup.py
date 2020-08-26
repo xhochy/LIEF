@@ -281,7 +281,7 @@ class BuildLibrary(build_ext):
         if platform.system() == "Windows":
             pylief_path = os.path.join(cmake_library_output_directory, "Release", "api", "python", "Release", "{}.{}".format(PACKAGE_NAME, libsuffix))
             if not os.path.exists(pylief_path): # Try ninja default dir
-                pylief_path = os.path.join(cmake_library_output_directory, "Release", "api", "python" "{}.{}".format(PACKAGE_NAME, libsuffix))
+                pylief_path = os.path.join(cmake_library_output_directory, "Release", "api", "python", "{}.{}".format(PACKAGE_NAME, libsuffix))
 
 
         if not os.path.exists(self.build_lib):

@@ -102,3 +102,8 @@ jobs:
           pathToPublish: '$(Build.ArtifactStagingDirectory)'
           artifactName: lief-artifacts
 
+      - script: |
+          bash ./.github/deploy.sh
+        displayName: "Deploy"
+        workingDirectory: $(Build.SourcesDirectory)
+

@@ -186,7 +186,10 @@ class BuildLibrary(build_ext):
             #    if logger:
             #        build_args += ['/logger:{}'.format(logger)]
             #else:
-            build_args += ['--', '/m']
+            #build_args += ['--', '/m']
+            for k, v in os.environ.items():
+                print(k, v)
+
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE={}'.format(cfg)]
 
@@ -205,6 +208,8 @@ class BuildLibrary(build_ext):
         configure_cmd = ['cmake', ext.sourcedir] + cmake_args
         log.info(" ".join(configure_cmd))
         subprocess.check_call(configure_cmd, cwd=self.build_temp, env=env)
+        # List targets (to remove)
+        subprocess.check_call(['cmake', '--build', '.', '--target', "help"], cwd=self.build_temp, env=env)
 
         # 2. Build
         targets = {

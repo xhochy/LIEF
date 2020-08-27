@@ -106,4 +106,7 @@ jobs:
           bash ./.github/deploy.sh
         displayName: "Deploy"
         workingDirectory: $(Build.SourcesDirectory)
+        env:
+          LIEF_AUTOMATIC_BUILDS_KEY: $(LIEF_AUTOMATIC_BUILDS_KEY)
+          LIEF_AUTOMATIC_BUILDS_IV: $(LIEF_AUTOMATIC_BUILDS_IV)
 

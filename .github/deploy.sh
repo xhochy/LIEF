@@ -8,7 +8,7 @@
 
 set -e; set -o pipefail
 
-PYTHON_BINARY=${PYTHON_BINARY:-/usr/bin/python}
+PYTHON_BINARY=${PYTHON_BINARY:-python3}
 if [[ $TRAVIS_OS_NAME == osx ]]; then
 argv0=$0; argv0abs=$(greadlink -en -- "$0"); argv0dir=$(dirname "$argv0abs")
 else

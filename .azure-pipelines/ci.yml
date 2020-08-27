@@ -41,6 +41,12 @@ jobs:
           versionSpec: $(PYTHON_VERSION)
           addToPath: true
           architecture: $(PYTHON_ARCH)
+
+      - task: Bash@3
+        inputs:
+          targetType: 'inline'
+          script: python.exe --version
+
       - script: python -m pip install --disable-pip-version-check --user --upgrade pip
         displayName: 'Install tools'
 

@@ -172,8 +172,11 @@ eval $(ssh-agent -s)
 set +x # IMPORTANT
 openssl aes-256-cbc -K $LIEF_AUTOMATIC_BUILDS_KEY -iv $LIEF_AUTOMATIC_BUILDS_IV -in "$LIEF_SRCDIR/.github/deploy-key.enc" -out .git/deploy-key -d
 set -x
-chmod 600 .git/deploy-key
-ssh-add .git/deploy-key
+umask 077
+openssl pkey < .git/deploy-key > .git/deploy-key.pkcs8
+ssh-add deploy-key.pkcs8
+chmod 600 .git/deploy-key.pkcs8
+#ssh-add .git/deploy-key
 fix_home_ssh_perms
 ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 fix_home_ssh_perms

@@ -8,7 +8,7 @@
 
 set -e; set -o pipefail
 
-PYTHON_BINARY=${PYTHON_BINARY:-python.exe}
+PYTHON_BINARY=${PYTHON_BINARY:-no_python}
 if [[ $TRAVIS_OS_NAME == osx ]]; then
 argv0=$0; argv0abs=$(greadlink -en -- "$0"); argv0dir=$(dirname "$argv0abs")
 else
@@ -172,11 +172,8 @@ eval $(ssh-agent -s)
 set +x # IMPORTANT
 openssl aes-256-cbc -K $LIEF_AUTOMATIC_BUILDS_KEY -iv $LIEF_AUTOMATIC_BUILDS_IV -in "$LIEF_SRCDIR/.github/deploy-key.enc" -out .git/deploy-key -d
 set -x
-umask 077
-openssl pkey < .git/deploy-key > .git/deploy-key.pkcs8
-ssh-add deploy-key.pkcs8
-chmod 600 .git/deploy-key.pkcs8
-#ssh-add .git/deploy-key
+chmod 600 .git/deploy-key
+ssh-add -vvv .git/deploy-key
 fix_home_ssh_perms
 ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 fix_home_ssh_perms

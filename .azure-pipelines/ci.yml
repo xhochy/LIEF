@@ -94,7 +94,7 @@ jobs:
       - task: CopyFiles@2
         inputs:
           sourceFolder: '$(Build.SourcesDirectory)'
-          contents: '**/$(BuildConfiguration)/dist/*.whl'
+          contents: 'dist/*.whl'
           targetFolder: '$(Build.ArtifactStagingDirectory)'
 
       - task: CopyFiles@2
@@ -113,6 +113,7 @@ jobs:
         displayName: "Deploy"
         workingDirectory: $(Build.SourcesDirectory)
         env:
+          PYTHON_BINARY: python.exe
           LIEF_AUTOMATIC_BUILDS_KEY: $(LIEF_AUTOMATIC_BUILDS_KEY)
           LIEF_AUTOMATIC_BUILDS_IV: $(LIEF_AUTOMATIC_BUILDS_IV)
 

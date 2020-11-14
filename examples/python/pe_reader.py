@@ -281,6 +281,7 @@ def print_debug(binary):
                 print(format_str.format("Code View Signature:", str(cv_signature).split(".")[-1]))
                 print(format_str.format("Signature:", sig_str))
                 print(format_dec.format("Age:", code_view.age))
+                print(format_str.format("GUID:", code_view.guid))
                 print(format_str.format("Filename:", code_view.filename))
 
         if debug.has_pogo:

@@ -22,6 +22,9 @@
 #include "LIEF/PE/EnumToString.hpp"
 #include "LIEF/PE/CodeViewPDB.hpp"
 
+#include "LIEF/BinaryStream/VectorStream.hpp"
+#include "spdlog/fmt/fmt.h"
+
 namespace LIEF {
 namespace PE {
 
@@ -85,6 +88,15 @@ const std::string& CodeViewPDB::filename(void) const {
   return this->filename_;
 }
 
+
+std::string CodeViewPDB::guid() {
+  VectorStream stream = std::vector<uint8_t>{std::begin(this->signature_), std::end(this->signature_)};
+  stream.set_endian_swap(true);
+  return fmt::format("{:08x}{:04x}{:04x}{:016x}",
+      stream.read<uint32_t>(),
+      stream.read<uint16_t>(), stream.read<uint16_t>(),
+      stream.read_conv<uint64_t>());
+}
 
 void CodeViewPDB::signature(uint32_t signature) {
   this->signature({{

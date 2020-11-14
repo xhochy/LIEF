@@ -48,6 +48,10 @@ void create<CodeViewPDB>(py::module& m) {
         static_cast<getter_t<const std::string&>>(&CodeViewPDB::filename),
         static_cast<setter_t<const std::string&>>(&CodeViewPDB::filename))
 
+    .def_property_readonly("guid",
+        &CodeViewPDB::guid)
+
+
     .def("__eq__", &CodeViewPDB::operator==)
     .def("__ne__", &CodeViewPDB::operator!=)
     .def("__hash__",

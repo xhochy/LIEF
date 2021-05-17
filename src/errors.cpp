@@ -45,3 +45,15 @@ const std::error_category& lief_error_category() {
 LIEF::error_t LIEF::return_error(lief_errors e) {
   return boost::leaf::new_error(e);
 }
+
+
+// We need to explicitly define this here as Boost infers from the defines/environment
+// that boost::throw_exception will be user-defined.
+namespace boost
+{
+#ifdef BOOST_NO_EXCEPTIONS
+void throw_exception( std::exception const & e ){
+    throw 11;
+};
+#endif
+}// namespace boost

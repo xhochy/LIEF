@@ -30,6 +30,9 @@ option(LIEF_DEX            "Build LIEF with DEX module"                 ON)
 option(LIEF_VDEX           "Build LIEF with VDEX module"                ON)
 option(LIEF_ART            "Build LIEF with ART module"                 ON)
 
+option(BUILD_STATIC_LIBS "Build LIEF (and pyLIEF mostly) statically"    OFF)
+option(BUILD_SHARED_LIBS "Build LIEF (and pyLIEF) shared"               ON)
+
 # Sanitizer
 option(LIEF_ASAN "Enable Address sanitizer"   OFF)
 option(LIEF_LSAN "Enable Leak sanitizer"      OFF)

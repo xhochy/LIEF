@@ -483,6 +483,25 @@ endif()
 
 set_target_properties(LIB_LIEF PROPERTIES OUTPUT_NAME LIEF CLEAN_DIRECT_OUTPUT 1)
 
+if(MSVC)
+  string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
+  if(build_type STREQUAL "debug")
+    set(CRT_OUTPUT_SUFFIX ${LIEF_USE_CRT_DEBUG})
+  else()
+    set(CRT_OUTPUT_SUFFIX ${LIEF_USE_CRT_RELEASE})
+  endif()
+  # Since the Python extension module will be called lief.pyd, we cannot have the C++ Library
+  # called LIEF.dll since Windows will not load both.
+  if(WIN32 AND BUILD_SHARED_LIBS)
+    set_target_properties(
+      LIB_LIEF
+      PROPERTIES OUTPUT_NAME libLIEF${CRT_OUTPUT_SUFFIX})
+  else()
+    set_target_properties(
+      LIB_LIEF
+     PROPERTIES OUTPUT_NAME LIEF${CRT_OUTPUT_SUFFIX})
+  endif()
+endif()
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)

@@ -489,8 +489,18 @@ if(MSVC)
   else()
     set(CRT_OUTPUT_SUFFIX ${LIEF_USE_CRT_RELEASE})
   endif()
-  set_target_properties(LIB_LIEF PROPERTIES OUTPUT_NAME LIEF${CRT_OUTPUT_SUFFIX}
-                                            CLEAN_DIRECT_OUTPUT 1)
+  # Since the Python extension module will be called lief.pyd, we cannot have the C++ Library
+  # called LIEF.dll since Windows will not load both.
+  if(WIN32 AND BUILD_SHARED_LIBS)
+    set_target_properties(
+      LIB_LIEF
+      PROPERTIES OUTPUT_NAME libLIEF${CRT_OUTPUT_SUFFIX})
+  else()
+    set_target_properties(
+      LIB_LIEF
+     PROPERTIES OUTPUT_NAME LIEF${CRT_OUTPUT_SUFFIX})
+  endif()
+  set_target_properties(LIB_LIEF PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 else()
   set_target_properties(LIB_LIEF PROPERTIES OUTPUT_NAME LIEF CLEAN_DIRECT_OUTPUT
                                                              1)
